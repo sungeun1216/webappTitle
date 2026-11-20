@@ -32,26 +32,79 @@ function renderResult(){$('results').hidden=false;$('cards').replaceChildren(...
 function csvCell(v){let s=String(v);if(/^[=+@-]/.test(s)&&typeof v!=='number')s="'"+s;return '"'+s.replaceAll('"','""')+'"';}
 $('download').onclick=()=>{if(!result)return;const rows=[['산업코드','산업명','생산유발액_백만원','수입유발액_백만원','부가가치유발액_백만원'],...result.rows.map(r=>[r.code,r.name,r.production,r.imports,r.valueAdded])];const url=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='io-2023-results.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
-async function loadDefaultWorkbook(){
- try {
-  $('status').textContent='기본 Excel 내려받는 중…';
-  const response=await fetch('./data/io-2023.xlsx');
-  if(!response.ok)throw Error('기본 Excel 다운로드 실패 (HTTP '+response.status+')');
-  await load(await response.arrayBuffer());
- }catch(error){
-  $('status').textContent='준비 실패: '+error.message+' — 연결 상태를 확인하고 새로고침하세요.';
- }
+const workbookFiles = {
+  basic: 'io-2023.xlsx',
+  large: '투입산출표_생산자가격_통합대분류.xlsx',
+  medium: '투입산출표_생산자가격_통합중분류.xlsx',
+  small: '투입산출표_생산자가격_통합소분류.xlsx'
+};
+
+const loadButton = $('load-basic');
+
+function resetClassification() {
+  invalidate();
+  basket = [];
+  renderBasket();
+
+  for (const id of [
+    'sheet', 'row', 'sector', 'add', 'run',
+    'row-search', 'col-search',
+    'sector-search', 'amount'
+  ]) {
+    $(id).disabled = true;
+  }
+
+  $('cells').replaceChildren();
+  $('validation').textContent = '새 자료를 불러오기 전입니다.';
+  $('status').textContent = '선택한 산업분류를 불러오세요.';
 }
-$('load-basic').onclick=async()=>{
- const button=$('load-basic');
- button.disabled=true;
- button.textContent='불러오는 중…';
- try {
-  await loadDefaultWorkbook();
-  const ready=!$('sheet').disabled;
-  button.textContent=ready?'기본부문 불러오기 완료':'기본부문 다시 불러오기';
-  button.disabled=ready;
- }finally{
-  if($('sheet').disabled){button.disabled=false;button.textContent='기본부문 다시 불러오기';}
- }
+
+$('classification').onchange = () => {
+  resetClassification();
+  loadButton.disabled = false;
+  loadButton.textContent = '선택한 분류 불러오기';
+};
+
+loadButton.onclick = async () => {
+  const type = $('classification').value;
+  const filename = workbookFiles[type];
+
+  if (!filename) {
+    $('status').textContent = '지원하지 않는 산업분류입니다.';
+    return;
+  }
+
+  loadButton.disabled = true;
+  loadButton.textContent = '불러오는 중…';
+  $('classification').disabled = true;
+  resetClassification();
+
+  try {
+    $('status').textContent = '엑셀 파일 내려받는 중…';
+
+    const response = await fetch(
+      './data/' + encodeURIComponent(filename)
+    );
+
+    if (!response.ok) {
+      throw new Error('엑셀 다운로드 실패: HTTP ' + response.status);
+    }
+
+    await load(await response.arrayBuffer());
+
+    const ready = !$('sheet').disabled;
+
+    loadButton.textContent = ready
+      ? '불러오기 완료'
+      : '다시 불러오기';
+
+    loadButton.disabled = ready;
+
+  } catch (error) {
+    $('status').textContent = '준비 실패: ' + error.message;
+    loadButton.textContent = '다시 불러오기';
+    loadButton.disabled = false;
+  } finally {
+    $('classification').disabled = false;
+  }
 };
