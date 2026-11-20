@@ -53,8 +53,9 @@ https://sungeun1216.github.io/webappTitle/
 
 - 자료 제공기관: 한국은행
 - 자료명: 2023년 산업연관표
-- 자료 출처: 한국은행 경제통계시스템(ECOS)
-- 홈페이지: https://ecos.bok.or.kr
+- 자료 제공 경로: KOSIS 국가통계포털
+- 자료 출처: https://stat.kosis.kr/nsibsHtmlSvc/fileView/FileStbl/fileStblView.do?conn_path=E1&in_org_id=301&in_tbl_id=DT_301010_FILE2023&tab_yn=N
+- 자료 활용: 산업분류별 조회 및 파급효과 분석을 위한 가공
 - 자료 범위: 생산자가격 기준 산업연관표
 - 활용 목적: 산업조직론 학습 및 산업연관분석
 - 자료 처리: 산업분류별 데이터 조회 및 파급효과 계산에 활용
